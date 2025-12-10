@@ -1,70 +1,81 @@
-import express from "express";
-import { WebSocketServer } from "ws";
+const http = require("http");
+const url = require("url");
+const WebSocket = require("ws");
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
-// Express HTTP server (for future usage if needed)
-const app = express();
-const server = app.listen(PORT, () =>
-  console.log("Server running on port", PORT)
-);
-
-// WebSocket Server
-const wss = new WebSocketServer({ server });
-
-let espClient = null;     // The ESP8266 connection
-let webClients = [];      // Browsers connected to UI
 let currentState = {
   cmd: "off",
-  r: 0,
-  g: 0,
-  b: 0,
-  speed: 50,
-  brightness: 100
+  speed: 60,
+  brightness: 80,
+  r: 255,
+  g: 255,
+  b: 255
 };
 
-// Handle WebSocket Connections
-wss.on("connection", (ws, req) => {
-  const url = req.url;
+function cors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
 
-  if (url === "/esp") {
-    console.log("ESP connected");
-    espClient = ws;
+const server = http.createServer((req, res) => {
+  const parsed = url.parse(req.url, true);
+  const { pathname, query } = parsed;
 
-    ws.send(JSON.stringify({ type: "state", data: currentState }));
+  if (pathname === "/set") {
+    if (query.cmd) currentState.cmd = String(query.cmd);
+    if (query.speed) currentState.speed = Number(query.speed);
+    if (query.brightness) currentState.brightness = Number(query.brightness);
+    if (query.r) currentState.r = Number(query.r);
+    if (query.g) currentState.g = Number(query.g);
+    if (query.b) currentState.b = Number(query.b);
 
-    ws.on("close", () => {
-      console.log("ESP disconnected");
-      espClient = null;
-    });
-
-  } else if (url === "/web") {
-    console.log("Web UI connected");
-    webClients.push(ws);
-
-    ws.send(JSON.stringify({ type: "state", data: currentState }));
-
-    ws.on("close", () => {
-      webClients = webClients.filter(c => c !== ws);
-    });
-
-    ws.on("message", msg => {
-      const data = JSON.parse(msg);
-
-      currentState = { ...currentState, ...data };
-
-      if (espClient && espClient.readyState === 1)
-        espClient.send(JSON.stringify(currentState));
-
-      webClients.forEach(c => {
-        if (c !== ws)
-          c.send(JSON.stringify({ type: "state", data: currentState }));
-      });
-    });
+    broadcastState();
+    cors(res);
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("OK");
+    return;
   }
+
+  if (pathname === "/state") {
+    cors(res);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(currentState));
+    return;
+  }
+
+  if (pathname === "/") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("Ethan's Jacket Server is running.\n");
+    return;
+  }
+
+  cors(res);
+  res.writeHead(404, { "Content-Type": "text/plain" });
+  res.end("Not found");
 });
 
-// Root page (to prevent 404)
-app.get("/", (req, res) => {
-  res.send("WebSocket LED Server is running.");
+const wss = new WebSocket.Server({
+  server,
+  path: "/ws"
+});
+
+const espClients = new Set();
+
+function broadcastState() {
+  const payload = JSON.stringify(currentState);
+  for (const ws of espClients) {
+    if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+  }
+}
+
+wss.on("connection", ws => {
+  espClients.add(ws);
+  if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(currentState));
+  ws.on("close", () => espClients.delete(ws));
+});
+
+server.listen(PORT, () => {
+  console.log("Server running on", PORT);
 });
