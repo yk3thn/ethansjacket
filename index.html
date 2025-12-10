@@ -1,195 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Ethan's Jacket Control</title>
-  <style>
-    body {
-      background:#111;
-      color:#e0e0e0;
-      font-family:'Cascadia Code', monospace;
-      text-align:center;
-      margin:0;
-      padding:20px;
-    }
-    h1 {
-      margin-top:10px;
-      color:#4CAF50;
-      font-size:36px;
-    }
+<title>Ethan Jacket Control</title>
+<style>
+  body {
+    background-color:#111;
+    color:#e0e0e0;
+    font-family:'Cascadia Code',monospace;
+    text-align:center;
+  }
+  h1 { margin-top:20px; color:#4CAF50; }
 
-    button {
-      padding:30px 60px;
-      margin:10px;
-      font-size:24px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      color:white;
-    }
+  button {
+    padding:35px 65px;
+    margin:20px;
+    font-size:28px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    color:white;
+  }
 
-    .red    { background:red; }
-    .green  { background:green; }
-    .blue   { background:#007BFF; }
-    .rainbow{
-      background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
-      color:white;
-    }
-    .off    { background:#555; }
+  .red { background:red; }
+  .green { background:green; }
+  .blue { background:#007BFF; }
+  .rainbow {
+    background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
+  }
+  .off { background:#555; }
 
-    .section {
-      margin-top:20px;
-      margin-bottom:10px;
-    }
+  input[type=range] {
+    width:80%;
+    margin-top:15px;
+    -webkit-appearance:none;
+    height:30px;
+    background:#333;
+    border-radius:15px;
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none;
+    width:50px; height:50px;
+    border-radius:50%;
+    background:#4CAF50;
+    cursor:pointer;
+    margin-top:-10px;
+  }
 
-    .sliderlabel {
-      font-size:20px;
-      margin-top:10px;
-      color:#4CAF50;
-    }
+  #picker {
+    display:block;
+    margin:40px auto 10px auto;
+    width:180px;
+    height:120px;
+  }
 
-    .slider {
-      width:80%;
-      margin-top:10px;
-      -webkit-appearance:none;
-      height:30px;
-      background:#333;
-      border-radius:15px;
-      outline:none;
-    }
-
-    .slider::-webkit-slider-runnable-track {
-      height:30px;
-      background:#333;
-      border-radius:15px;
-    }
-
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance:none;
-      width:50px;
-      height:50px;
-      border-radius:50%;
-      background:#4CAF50;
-      cursor:pointer;
-      margin-top:-10px;
-    }
-
-    .slider::-moz-range-thumb {
-      width:50px;
-      height:50px;
-      border-radius:50%;
-      background:#4CAF50;
-      cursor:pointer;
-    }
-
-    #picker {
-      display:block;
-      margin:30px auto 10px auto;
-      width:180px;
-      height:120px;
-    }
-
-    .set {
-      background:white;
-      color:black;
-      margin-top:5px;
-      padding:22px 45px;
-      font-size:22px;
-      border-radius:12px;
-      border:none;
-      cursor:pointer;
-    }
-
-    #status {
-      margin-top:20px;
-      font-size:18px;
-      color:#0f0;
-      min-height:24px;
-    }
-  </style>
-
-  <script>
-    const API = "https://ethansjacket.yk3thn.workers.dev/set";
-
-    function send(cmd) {
-      fetch(API + "?cmd=" + encodeURIComponent(cmd))
-        .then(() => {
-          document.getElementById("status").innerText = "Sent: " + cmd;
-        })
-        .catch(() => {
-          document.getElementById("status").innerText = "Error sending command";
-        });
-    }
-
-    function setColor() {
-      const hex = document.getElementById("picker").value.substring(1);
-      const r = parseInt(hex.substring(0,2), 16);
-      const g = parseInt(hex.substring(2,4), 16);
-      const b = parseInt(hex.substring(4,6), 16);
-      const cmd = `color,${r},${g},${b}`;
-      send(cmd);
-    }
-
-    function updateAnimSpeed(val) {
-      // val is 1–100, ESP expects animspeed,VALUE
-      const cmd = `animspeed,${val}`;
-      send(cmd);
-    }
-
-    function updateBrightness(val) {
-      // val is 5–255
-      const cmd = `brightness,${val}`;
-      send(cmd);
-    }
-  </script>
+  .set {
+    background:white;
+    color:black;
+    margin-top:5px;
+    padding:25px 50px;
+    font-size:26px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+  }
+</style>
 </head>
-
 <body>
-  <h1>Ethan's Jacket Control</h1>
 
-  <!-- Row 1: RGB buttons -->
-  <div class="section">
-    <button class="red"   onclick="send('red')">Red</button>
-    <button class="green" onclick="send('green')">Green</button>
-    <button class="blue"  onclick="send('blue')">Blue</button>
+<h1>ESP LED Controller</h1>
+
+<!-- ROW 1: Red / Green / Blue -->
+<div>
+  <button class="red" onclick="send('red')">Red</button>
+  <button class="green" onclick="send('green')">Green</button>
+  <button class="blue" onclick="send('blue')">Blue</button>
+</div>
+
+<!-- ROW 2: Rainbow + Speed slider -->
+<div>
+  <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
+
+  <input type="range" id="speed" min="1" max="100" value="60"
+         oninput="updateSpeed(this.value)">
+  <div style="font-size:22px;margin-top:10px;color:#4CAF50;">
+    Animation Speed
   </div>
+</div>
 
-  <!-- Row 2: Rainbow + Animation Speed -->
-  <div class="section">
-    <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
-    <div class="sliderlabel">Animation Speed</div>
-    <input type="range"
-           class="slider"
-           id="speed"
-           min="1"
-           max="100"
-           value="50"
-           oninput="updateAnimSpeed(this.value)">
+<!-- ROW 3: Color Picker -->
+<div>
+  <input type="color" id="picker" value="#ffffff">
+  <button class="set" onclick="setColor()">Set Color</button>
+</div>
+
+<!-- ROW 4: Brightness -->
+<div>
+  <input type="range" id="bright" min="1" max="255" value="80"
+         oninput="updateBrightness(this.value)">
+  <div style="font-size:22px;margin-top:10px;color:#4CAF50;">
+    Brightness
   </div>
+</div>
 
-  <!-- Row 3: Color Picker -->
-  <div class="section">
-    <input type="color" id="picker" value="#ffffff">
-    <button class="set" onclick="setColor()">Set Color</button>
-  </div>
+<!-- ROW 5: OFF -->
+<div>
+  <button class="off" onclick="send('off')">Off</button>
+</div>
 
-  <!-- Row 4: Brightness -->
-  <div class="section">
-    <div class="sliderlabel">Brightness</div>
-    <input type="range"
-           class="slider"
-           id="brightness"
-           min="5"
-           max="255"
-           value="180"
-           oninput="updateBrightness(this.value)">
-  </div>
+<script>
+const BASE = "https://ethansjacket-production.up.railway.app";
 
-  <!-- Row 5: OFF -->
-  <div class="section">
-    <button class="off" onclick="send('off')">OFF</button>
-  </div>
+function send(cmd) {
+  fetch(`${BASE}/set?cmd=${cmd}`)
+    .catch(err => console.error("Error sending command", err));
+}
 
-  <div id="status">Ready</div>
+function updateSpeed(v) {
+  fetch(`${BASE}/set?cmd=rainbow&speed=${v}`)
+    .catch(err => console.error("Error sending speed", err));
+}
+
+function updateBrightness(v) {
+  fetch(`${BASE}/set?brightness=${v}&cmd=keep`)
+    .catch(err => console.error("Error sending brightness", err));
+}
+
+function setColor() {
+  const color = document.getElementById("picker").value.substring(1);
+  const r = parseInt(color.substring(0,2), 16);
+  const g = parseInt(color.substring(2,4), 16);
+  const b = parseInt(color.substring(4,6), 16);
+
+  fetch(`${BASE}/set?cmd=color&r=${r}&g=${g}&b=${b}`)
+    .catch(err => console.error("Error sending color", err));
+}
+</script>
+
 </body>
 </html>
