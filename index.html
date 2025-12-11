@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ethan Jacket Controller</title>
+<title>Ethan's Jacket Controller</title>
 <style>
   body {
     background-color:#111;
@@ -89,7 +89,7 @@
   <button class="blue" onclick="send('blue')">Blue</button>
 </div>
 
-<!-- ROW 2: Rainbow + Speed slider (STACKED properly) -->
+<!-- ROW 2: Rainbow + Speed slider -->
 <div class="control-block">
   <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
 
@@ -124,17 +124,13 @@
 <script>
 const BASE = "https://ethansjacket-production.up.railway.app";
 
-/* --------------------------------------------------
-   BASIC COMMAND SENDER
---------------------------------------------------*/
+/* BASIC COMMAND SENDER */
 function send(cmd) {
   fetch(`${BASE}/set?cmd=${cmd}`)
     .catch(err => console.error("Error sending command", err));
 }
 
-/* --------------------------------------------------
-   DEBOUNCED SPEED SLIDER
---------------------------------------------------*/
+/* DEBOUNCED SPEED SLIDER */
 let speedTimeout = null;
 function debounceSpeed(val) {
   if (speedTimeout) clearTimeout(speedTimeout);
@@ -145,9 +141,7 @@ function debounceSpeed(val) {
   }, 150);
 }
 
-/* --------------------------------------------------
-   DEBOUNCED BRIGHTNESS SLIDER
---------------------------------------------------*/
+/* DEBOUNCED BRIGHTNESS SLIDER */
 let brightTimeout = null;
 function debounceBrightness(val) {
   if (brightTimeout) clearTimeout(brightTimeout);
@@ -158,9 +152,7 @@ function debounceBrightness(val) {
   }, 150);
 }
 
-/* --------------------------------------------------
-   COLOR PICKER
---------------------------------------------------*/
+/* COLOR PICKER */
 function setColor() {
   const color = document.getElementById("picker").value.substring(1);
   const r = parseInt(color.substring(0,2), 16);
