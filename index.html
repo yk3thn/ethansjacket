@@ -69,27 +69,75 @@
     cursor:pointer;
   }
 
-  /* FIXED LAYOUT FOR DESKTOP */
   .control-block {
     display:flex;
     flex-direction:column;
     align-items:center;
     width:100%;
   }
+
+  #wavePopup {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+  }
+  #wavePopupInner {
+    background:#222;
+    padding:25px;
+    border-radius:16px;
+    border:1px solid #4CAF50;
+    min-width:260px;
+  }
+  #wavePopupInner h2 {
+    margin-top:0;
+    margin-bottom:15px;
+    color:#4CAF50;
+  }
+  #wavePopupInner label {
+    display:block;
+    margin:10px 0 5px 0;
+  }
+  #wavePopupInner input[type=color] {
+    width:100%;
+    height:50px;
+    border:none;
+    padding:0;
+    background:none;
+  }
+  #wavePopupInner button {
+    padding:15px 30px;
+    margin:10px;
+    font-size:18px;
+  }
 </style>
 </head>
 <body>
 
-<h1>ESP LED Controller</h1>
+<h1>Ethan's Jacket Controller</h1>
 
-<!-- ROW 1: Red / Green / Blue -->
+<div class="control-block">
+  <label for="effectSelect" style="font-size:22px;margin-top:10px;color:#4CAF50;">
+    Effect
+  </label>
+  <select id="effectSelect" onchange="selectEffect(this.value)"
+          style="margin-top:10px;font-size:20px;padding:10px 20px;border-radius:10px;border:none;">
+    <option value="none">None</option>
+    <option value="shooting_star">Shooting Star</option>
+    <option value="christmas">Christmas</option>
+    <option value="wave">Wave (2-color)</option>
+  </select>
+</div>
+
 <div>
   <button class="red" onclick="send('red')">Red</button>
   <button class="green" onclick="send('green')">Green</button>
   <button class="blue" onclick="send('blue')">Blue</button>
 </div>
 
-<!-- ROW 2: Rainbow + Speed slider -->
 <div class="control-block">
   <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
 
@@ -101,13 +149,11 @@
   </div>
 </div>
 
-<!-- ROW 3: Color Picker -->
 <div>
   <input type="color" id="picker" value="#ffffff">
   <button class="set" onclick="setColor()">Set Color</button>
 </div>
 
-<!-- ROW 4: Brightness -->
 <div class="control-block">
   <input type="range" id="bright" min="1" max="255" value="80"
          oninput="debounceBrightness(this.value)">
@@ -116,51 +162,100 @@
   </div>
 </div>
 
-<!-- ROW 5: OFF -->
 <div>
   <button class="off" onclick="send('off')">Off</button>
 </div>
 
+<div id="wavePopup">
+  <div id="wavePopupInner">
+    <h2>Wave Colors</h2>
+    <label>Color 1</label>
+    <input type="color" id="waveC1" value="#0000ff">
+    <label>Color 2</label>
+    <input type="color" id="waveC2" value="#ff00ff">
+    <div style="margin-top:15px;">
+      <button onclick="applyWave()">Apply</button>
+      <button onclick="closeWavePopup()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const BASE = "https://ethansjacket-production.up.railway.app";
+let currentEffect = "none";
 
-/* BASIC COMMAND SENDER */
 function send(cmd) {
-  fetch(`${BASE}/set?cmd=${cmd}`)
-    .catch(err => console.error("Error sending command", err));
+  currentEffect = cmd;
+  fetch(`${BASE}/set?cmd=${cmd}`).catch(()=>{});
 }
 
-/* DEBOUNCED SPEED SLIDER */
-let speedTimeout = null;
-function debounceSpeed(val) {
-  if (speedTimeout) clearTimeout(speedTimeout);
-
-  speedTimeout = setTimeout(() => {
-    fetch(`${BASE}/set?cmd=rainbow&speed=${val}`)
-      .catch(err => console.error("Error sending speed", err));
-  }, 150);
+let speedTimeout=null;
+function debounceSpeed(val){
+  if(speedTimeout)clearTimeout(speedTimeout);
+  speedTimeout=setTimeout(()=>{
+    fetch(`${BASE}/set?speed=${val}`).catch(()=>{});
+  },150);
 }
 
-/* DEBOUNCED BRIGHTNESS SLIDER */
-let brightTimeout = null;
-function debounceBrightness(val) {
-  if (brightTimeout) clearTimeout(brightTimeout);
-
-  brightTimeout = setTimeout(() => {
-    fetch(`${BASE}/set?brightness=${val}`)
-      .catch(err => console.error("Error sending brightness", err));
-  }, 150);
+let brightTimeout=null;
+function debounceBrightness(val){
+  if(brightTimeout)clearTimeout(brightTimeout);
+  brightTimeout=setTimeout(()=>{
+    fetch(`${BASE}/set?brightness=${val}`).catch(()=>{});
+  },150);
 }
 
-/* COLOR PICKER */
-function setColor() {
-  const color = document.getElementById("picker").value.substring(1);
-  const r = parseInt(color.substring(0,2), 16);
-  const g = parseInt(color.substring(2,4), 16);
-  const b = parseInt(color.substring(4,6), 16);
+function setColor(){
+  const c=document.getElementById("picker").value.substring(1);
+  const r=parseInt(c.substring(0,2),16);
+  const g=parseInt(c.substring(2,4),16);
+  const b=parseInt(c.substring(4,6),16);
+  currentEffect="color";
+  fetch(`${BASE}/set?cmd=color&r=${r}&g=${g}&b=${b}`).catch(()=>{});
+}
 
-  fetch(`${BASE}/set?cmd=color&r=${r}&g=${g}&b=${b}`)
-    .catch(err => console.error("Error sending color", err));
+function selectEffect(val){
+  if(val==="wave"){
+    openWavePopup();
+    return;
+  }
+  currentEffect = val;
+  fetch(`${BASE}/set?cmd=${val}`).catch(()=>{});
+}
+
+function openWavePopup(){
+  document.getElementById("wavePopup").style.display="flex";
+}
+function closeWavePopup(){
+  document.getElementById("wavePopup").style.display="none";
+}
+
+function applyWave(){
+  const c1=document.getElementById("waveC1").value.substring(1);
+  const c2=document.getElementById("waveC2").value.substring(1);
+
+  const c1r=parseInt(c1.substring(0,2),16);
+  const c1g=parseInt(c1.substring(2,4),16);
+  const c1b=parseInt(c1.substring(4,6),16);
+
+  const c2r=parseInt(c2.substring(0,2),16);
+  const c2g=parseInt(c2.substring(2,4),16);
+  const c2b=parseInt(c2.substring(4,6),16);
+
+  const speed=document.getElementById("speed").value;
+  const bright=document.getElementById("bright").value;
+
+  currentEffect="wave";
+
+  const url =
+    `${BASE}/set?cmd=wave`+
+    `&c1r=${c1r}&c1g=${c1g}&c1b=${c1b}`+
+    `&c2r=${c2r}&c2g=${c2g}&c2b=${c2b}`+
+    `&speed=${speed}`+
+    `&brightness=${bright}`;
+
+  fetch(url).catch(()=>{});
+  closeWavePopup();
 }
 </script>
 
