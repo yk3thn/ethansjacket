@@ -12,12 +12,12 @@
     padding:0;
   }
 
-  h1 { margin-top:20px; color:#4CAF50; }
+  h1 { margin-top:20px; color:#4CAF50; font-size:45px; }
 
   button {
-    padding:35px 65px;
+    padding:30px 60px;
     margin:20px;
-    font-size:28px;
+    font-size:40px;
     border:none;
     border-radius:12px;
     cursor:pointer;
@@ -63,7 +63,7 @@
     color:black;
     margin-top:5px;
     padding:25px 50px;
-    font-size:26px;
+    font-size:40px;
     border-radius:12px;
     border:none;
     cursor:pointer;
@@ -121,11 +121,11 @@
 <h1>Ethan's Jacket Controller</h1>
 
 <div class="control-block">
-  <label for="effectSelect" style="font-size:22px;margin-top:10px;color:#4CAF50;">
+  <label for="effectSelect" style="font-size:35px;margin-top:10px;color:#4CAF50;">
     Effect
   </label>
   <select id="effectSelect" onchange="selectEffect(this.value)"
-          style="margin-top:10px;font-size:20px;padding:10px 20px;border-radius:10px;border:none;">
+          style="margin-top:10px;font-size:30px;padding:10px 20px;border-radius:10px;border:none;">
     <option value="none">None</option>
     <option value="shooting_star">Shooting Star</option>
     <option value="christmas">Christmas</option>
@@ -146,7 +146,7 @@
   <input type="range" id="speed" min="1" max="100" value="60"
          oninput="debounceSpeed(this.value)">
   
-  <div style="font-size:22px;margin-top:10px;color:#4CAF50;">
+  <div style="font-size:35px;margin-top:10px;color:#4CAF50;">
     Animation Speed
   </div>
 </div>
@@ -159,7 +159,7 @@
 <div class="control-block">
   <input type="range" id="bright" min="1" max="255" value="80"
          oninput="debounceBrightness(this.value)">
-  <div style="font-size:22px;margin-top:10px;color:#4CAF50;">
+  <div style="font-size:35px;margin-top:10px;color:#4CAF50;">
     Brightness
   </div>
 </div>
@@ -175,7 +175,7 @@
     <input type="color" id="waveC1" value="#0000ff">
     <label>Color 2</label>
     <input type="color" id="waveC2" value="#ff00ff">
-    <div style="margin-top:15px;">
+    <div style="margin-top:25px;">
       <button onclick="applyWave()">Apply</button>
       <button onclick="closeWavePopup()">Close</button>
     </div>
