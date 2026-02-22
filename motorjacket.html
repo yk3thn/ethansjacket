@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Motor Jacket</title>
+<style>
+body{
+  background:#111;
+  color:#e0e0e0;
+  font-family:'Cascadia Code',monospace;
+  text-align:center;
+  margin:0;
+}
+
+h1{
+  margin-top:20px;
+  color:#4CAF50;
+  font-size:45px;
+}
+
+button{
+  padding:25px 50px;
+  margin:20px;
+  font-size:30px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  color:white;
+  background:#4CAF50;
+}
+
+.emergency{
+  background:red;
+  font-size:35px;
+}
+
+input[type=range]{
+  width:80%;
+  margin-top:15px;
+  -webkit-appearance:none;
+  height:30px;
+  background:#333;
+  border-radius:15px;
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:#4CAF50;
+  cursor:pointer;
+  margin-top:-10px;
+}
+.page-title{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin-top:40px;
+}
+
+.page-title img{
+  width:min(80vw, 900px);
+  height:auto;
+  display:block;
+  filter:drop-shadow(0 0 30px rgba(255,255,255,0.5));
+}
+</style>
+</head>
+
+<body>
+
+<div class="page-title">
+  <img src="MOTOR.png" alt="MOTOR">
+</div>
+
+<div>
+  <button onclick="location.href='index.html'">Home</button>
+</div>
+
+<button class="emergency" onclick="toggleMotors()">
+  EMERGENCY STOP
+</button>
+
+<h2 style="color:#4CAF50;">Left Arm</h2>
+<button onclick="setDir('A','cw')">CW</button>
+<button onclick="setDir('A','ccw')">CCW</button>
+<input type="range" min="0" max="1023" value="0"
+       oninput="setSpeed('A',this.value)">
+<div style="font-size:30px;color:#4CAF50;">Speed</div>
+
+<h2 style="color:#4CAF50;">Right Arm</h2>
+<button onclick="setDir('B','cw')">CW</button>
+<button onclick="setDir('B','ccw')">CCW</button>
+<input type="range" min="0" max="1023" value="0"
+       oninput="setSpeed('B',this.value)">
+<div style="font-size:30px;color:#4CAF50;">Speed</div>
+
+<script>
+const BASE="https://ethansjacket-production.up.railway.app";
+let motorsOn=true;
+
+function toggleMotors(){
+  motorsOn=!motorsOn;
+  fetch(`${BASE}/motor?global=${motorsOn?"on":"off"}`).catch(()=>{});
+}
+
+function setDir(motor,dir){
+  fetch(`${BASE}/motor?motor=${motor}&dir=${dir}`).catch(()=>{});
+}
+
+function setSpeed(motor,val){
+  fetch(`${BASE}/motor?motor=${motor}&speed=${val}`).catch(()=>{});
+}
+</script>
+
+</body>
+</html>

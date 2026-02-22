@@ -1,265 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ethan's Jacket Controller</title>
+<title>Ethan's Jackets</title>
 <style>
-  body {
-    background-color:#111;
-    color:#e0e0e0;
-    font-family:'Cascadia Code',monospace;
-    text-align:center;
-    margin:0;
-    padding:0;
-  }
 
-  h1 { margin-top:20px; color:#4CAF50; font-size:45px; }
+body{
+  background:#111;
+  color:#e0e0e0;
+  font-family:'Cascadia Code',monospace;
+  text-align:center;
+  margin:0;
+  overflow-x:hidden;
+}
 
-  button {
-    padding:30px 60px;
-    margin:20px;
-    font-size:40px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    color:white;
-  }
+h1{
+  margin-top:40px;
+  color:#4CAF50;
+  font-size:clamp(28px, 4vw, 45px);
+}
 
-  .red { background:red; }
-  .green { background:green; }
-  .blue { background:#007BFF; }
-  .rainbow {
-    background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
-  }
-  .off { background:#555; }
+/* Layout */
+.container{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8vw;
+  margin-top:8vh;
+  flex-wrap:wrap;
+}
 
-  input[type=range] {
-    width:80%;
-    margin-top:15px;
-    -webkit-appearance:none;
-    height:30px;
-    background:#333;
-    border-radius:15px;
-    outline:none;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance:none;
-    width:50px;
-    height:50px;
-    border-radius:50%;
-    background:#4CAF50;
-    cursor:pointer;
-    margin-top:-10px;
-  }
+/* Wrapper */
+.jacket-wrapper{
+  position:relative;
+  width:min(40vw, 420px);
+  aspect-ratio:1/1;
+  cursor:pointer;
+}
 
-  #picker {
-    display:block;
-    margin:40px auto 10px auto;
-    width:180px;
-    height:120px;
-  }
+/* Rays */
+.rays{
+  position:absolute;
+  inset:-30%;
+  background:
+    radial-gradient(circle at center,
+      rgba(255,255,255,0.6) 0%,
+      rgba(255,255,255,0.25) 15%,
+      transparent 65%),
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255,255,255,0.20) 0deg,
+      rgba(255,255,255,0.12) 7deg,
+      rgba(255,255,255,0.05) 14deg,
+      transparent 20deg,
+      transparent 30deg
+    );
+  filter:blur(45px);
+  animation:spin 40s linear infinite;
+  z-index:0;
+  opacity:0.85;
+}
 
-  .set {
-    background:white;
-    color:black;
-    margin-top:5px;
-    padding:25px 50px;
-    font-size:40px;
-    border-radius:12px;
-    border:none;
-    cursor:pointer;
-  }
+/* Image */
+.jacket-img{
+  position:relative;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  z-index:2;
+  transition:transform .4s ease, filter .4s ease;
+}
 
-  .control-block {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    width:100%;
-  }
+.jacket-wrapper:hover .jacket-img{
+  transform:scale(1.08);
+  filter:drop-shadow(0 0 40px rgba(255,255,255,0.7));
+}
 
-  #wavePopup {
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.75);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:999;
-  }
-  #wavePopupInner {
-    background:#222;
-    padding:25px;
-    border-radius:16px;
-    border:1px solid #4CAF50;
-    min-width:260px;
-  }
-  #wavePopupInner h2 {
-    margin-top:0;
-    margin-bottom:15px;
-    color:#4CAF50;
-  }
-  #wavePopupInner label {
-    display:block;
-    margin:10px 0 5px 0;
-  }
-  #wavePopupInner input[type=color] {
-    width:100%;
-    height:50px;
-    border:none;
-    padding:0;
-    background:none;
-  }
-  #wavePopupInner button {
-    padding:15px 30px;
-    margin:10px;
-    font-size:18px;
-	background:#000000;
-  }
+/* Overlay Text */
+.overlay-text{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:100%;
+  text-align:center;
+  font-size:clamp(20px, 3vw, 46px);
+  letter-spacing:clamp(6px, 0.6vw, 18px);
+  white-space:nowrap;
+  color:white;
+  z-index:3;
+  pointer-events:none;
+  text-shadow:
+    0 0 20px rgba(255,255,255,0.6),
+    0 0 40px rgba(255,255,255,0.4);
+  animation:softFade 5s ease-in-out infinite;
+}
+
+/* Fade animation */
+@keyframes softFade{
+  0%   { opacity:0.25; }
+  20% { opacity:0.5;}
+  30% { opacity:0.7;}
+  50%  { opacity:0.8; }
+  70%  { opacity:0.20; }
+  80%  { opacity:0.60; }
+  100% { opacity:0.25; }
+}
+
+/* Ray spin */
+@keyframes spin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
 </style>
 </head>
+
 <body>
 
-<h1>Ethan's Jacket Controller</h1>
+<h1>Ethan's Jackets</h1>
 
-<div class="control-block">
-  <label for="effectSelect" style="font-size:35px;margin-top:10px;color:#4CAF50;">
-    Effect
-  </label>
-  <select id="effectSelect" onchange="selectEffect(this.value)"
-          style="margin-top:10px;font-size:30px;padding:10px 20px;border-radius:10px;border:none;">
-    <option value="none">None</option>
-    <option value="shooting_star">Shooting Star</option>
-    <option value="christmas">Christmas</option>
-	<option value="sparkler">Sparkler</option>
-    <option value="wave">Wave (2-color)</option>
-  </select>
-</div>
+<div class="container">
 
-<div>
-  <button class="red" onclick="send('red')">Red</button>
-  <button class="green" onclick="send('green')">Green</button>
-  <button class="blue" onclick="send('blue')">Blue</button>
-</div>
-
-<div class="control-block">
-  <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
-
-  <input type="range" id="speed" min="1" max="100" value="60"
-         oninput="debounceSpeed(this.value)">
-  
-  <div style="font-size:35px;margin-top:10px;color:#4CAF50;">
-    Animation Speed
+  <!-- LIGHT -->
+  <div class="jacket-wrapper"
+       onclick="location.href='lightjacket.html'">
+    <div class="rays"></div>
+    <img src="lightjacket.png" class="jacket-img">
+    <div class="overlay-text">"LIGHT"</div>
   </div>
-</div>
 
-<div>
-  <input type="color" id="picker" value="#ffffff">
-  <button class="set" onclick="setColor()">Set Color</button>
-</div>
-
-<div class="control-block">
-  <input type="range" id="bright" min="1" max="255" value="80"
-         oninput="debounceBrightness(this.value)">
-  <div style="font-size:35px;margin-top:10px;color:#4CAF50;">
-    Brightness
+  <!-- MOTOR -->
+  <div class="jacket-wrapper"
+       onclick="location.href='motorjacket.html'">
+    <div class="rays"></div>
+    <img src="motorjacket.png" class="jacket-img">
+    <div class="overlay-text">"MOTOR"</div>
   </div>
+
 </div>
-
-<div>
-  <button class="off" onclick="send('off')">Off</button>
-</div>
-
-<div id="wavePopup">
-  <div id="wavePopupInner">
-    <h2>Wave Colors</h2>
-    <label>Color 1</label>
-    <input type="color" id="waveC1" value="#0000ff">
-    <label>Color 2</label>
-    <input type="color" id="waveC2" value="#ff00ff">
-    <div style="margin-top:25px;">
-      <button onclick="applyWave()">Apply</button>
-      <button onclick="closeWavePopup()">Close</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const BASE = "https://ethansjacket-production.up.railway.app";
-let currentEffect = "none";
-
-function send(cmd) {
-  currentEffect = cmd;
-  fetch(`${BASE}/set?cmd=${cmd}`).catch(()=>{});
-}
-
-let speedTimeout=null;
-function debounceSpeed(val){
-  if(speedTimeout)clearTimeout(speedTimeout);
-  speedTimeout=setTimeout(()=>{
-    fetch(`${BASE}/set?speed=${val}`).catch(()=>{});
-  },150);
-}
-
-let brightTimeout=null;
-function debounceBrightness(val){
-  if(brightTimeout)clearTimeout(brightTimeout);
-  brightTimeout=setTimeout(()=>{
-    fetch(`${BASE}/set?brightness=${val}`).catch(()=>{});
-  },150);
-}
-
-function setColor(){
-  const c=document.getElementById("picker").value.substring(1);
-  const r=parseInt(c.substring(0,2),16);
-  const g=parseInt(c.substring(2,4),16);
-  const b=parseInt(c.substring(4,6),16);
-  currentEffect="color";
-  fetch(`${BASE}/set?cmd=color&r=${r}&g=${g}&b=${b}`).catch(()=>{});
-}
-
-function selectEffect(val){
-  if(val==="wave"){
-    openWavePopup();
-    return;
-  }
-  currentEffect = val;
-  fetch(`${BASE}/set?cmd=${val}`).catch(()=>{});
-}
-
-function openWavePopup(){
-  document.getElementById("wavePopup").style.display="flex";
-}
-function closeWavePopup(){
-  document.getElementById("wavePopup").style.display="none";
-}
-
-function applyWave(){
-  const c1=document.getElementById("waveC1").value.substring(1);
-  const c2=document.getElementById("waveC2").value.substring(1);
-
-  const c1r=parseInt(c1.substring(0,2),16);
-  const c1g=parseInt(c1.substring(2,4),16);
-  const c1b=parseInt(c1.substring(4,6),16);
-
-  const c2r=parseInt(c2.substring(0,2),16);
-  const c2g=parseInt(c2.substring(2,4),16);
-  const c2b=parseInt(c2.substring(4,6),16);
-
-  const speed=document.getElementById("speed").value;
-  const bright=document.getElementById("bright").value;
-
-  currentEffect="wave";
-
-  const url =
-    `${BASE}/set?cmd=wave`+
-    `&c1r=${c1r}&c1g=${c1g}&c1b=${c1b}`+
-    `&c2r=${c2r}&c2g=${c2g}&c2b=${c2b}`+
-    `&speed=${speed}`+
-    `&brightness=${bright}`;
-
-  fetch(url).catch(()=>{});
-  closeWavePopup();
-}
-</script>
 
 </body>
 </html>

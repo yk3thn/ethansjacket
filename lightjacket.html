@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Light Jacket</title>
+<style>
+body{
+  background:#111;
+  color:#e0e0e0;
+  font-family:'Cascadia Code',monospace;
+  text-align:center;
+  margin:0;
+}
+
+h1{
+  margin-top:20px;
+  color:#4CAF50;
+  font-size:45px;
+}
+
+button{
+  padding:30px 60px;
+  margin:20px;
+  font-size:40px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:#4CAF50;
+  color:white;
+}
+
+.red{background:red;}
+.green{background:green;}
+.blue{background:#007BFF;}
+.rainbow{
+  background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
+}
+.off{background:#555;}
+
+input[type=range]{
+  width:80%;
+  margin-top:15px;
+  -webkit-appearance:none;
+  height:30px;
+  background:#333;
+  border-radius:15px;
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:#4CAF50;
+  cursor:pointer;
+  margin-top:-10px;
+}
+.page-title{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin-top:40px;
+}
+
+.page-title img{
+  width:min(80vw, 900px);
+  height:auto;
+  display:block;
+  filter:drop-shadow(0 0 30px rgba(255,255,255,0.5));
+}
+</style>
+</head>
+
+<body>
+
+<div class="page-title">
+  <img src="LIGHT.png" alt="LIGHT">
+</div>
+
+<div>
+  <button onclick="location.href='index.html'">Home</button>
+</div>
+
+<div>
+  <button class="red" onclick="send('red')">Red</button>
+  <button class="green" onclick="send('green')">Green</button>
+  <button class="blue" onclick="send('blue')">Blue</button>
+</div>
+
+<div>
+  <button class="rainbow" onclick="send('rainbow')">Rainbow</button>
+  <input type="range" min="1" max="100" value="60"
+         oninput="debounceSpeed(this.value)">
+  <div style="font-size:35px;color:#4CAF50;">Animation Speed</div>
+</div>
+
+<div>
+  <input type="range" min="1" max="255" value="80"
+         oninput="debounceBrightness(this.value)">
+  <div style="font-size:35px;color:#4CAF50;">Brightness</div>
+</div>
+
+<div>
+  <button class="off" onclick="send('off')">Off</button>
+</div>
+
+<script>
+const BASE="https://ethansjacket-production.up.railway.app";
+
+function send(cmd){
+  fetch(`${BASE}/set?cmd=${cmd}`).catch(()=>{});
+}
+
+let speedTimeout=null;
+function debounceSpeed(val){
+  if(speedTimeout)clearTimeout(speedTimeout);
+  speedTimeout=setTimeout(()=>{
+    fetch(`${BASE}/set?speed=${val}`).catch(()=>{});
+  },150);
+}
+
+let brightTimeout=null;
+function debounceBrightness(val){
+  if(brightTimeout)clearTimeout(brightTimeout);
+  brightTimeout=setTimeout(()=>{
+    fetch(`${BASE}/set?brightness=${val}`).catch(()=>{});
+  },150);
+}
+</script>
+
+</body>
+</html>
