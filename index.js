@@ -4,7 +4,10 @@ const WebSocket = require("ws");
 
 const PORT = process.env.PORT || 3000;
 
+// ===== GLOBAL STATE =====
 let currentState = {
+
+  // LIGHT JACKET
   cmd: "off",
   speed: 60,
   brightness: 80,
@@ -12,7 +15,12 @@ let currentState = {
   g: 255,
   b: 255,
   c1r: 0, c1g: 0, c1b: 255,
-  c2r: 255, c2g: 0, c2b: 255
+  c2r: 255, c2g: 0, c2b: 255,
+
+  // MOTOR JACKET
+  motorsEnabled: true,
+  motorA: { speed: 0, dir: "cw" },
+  motorB: { speed: 0, dir: "cw" }
 };
 
 function cors(res){
@@ -25,8 +33,8 @@ const server=http.createServer((req,res)=>{
   const parsed=url.parse(req.url,true);
   const {pathname,query}=parsed;
 
+  // ===== LIGHT JACKET ENDPOINT =====
   if(pathname==="/set"){
-    console.log("SET:",query);
 
     if(query.cmd && query.cmd!=="keep")
       currentState.cmd=String(query.cmd);
@@ -53,6 +61,37 @@ const server=http.createServer((req,res)=>{
     return;
   }
 
+  // ===== MOTOR JACKET ENDPOINT =====
+  if(pathname==="/motor"){
+
+    if(query.global){
+      currentState.motorsEnabled = query.global === "on";
+    }
+
+    const { motor, speed, dir } = query;
+
+    if(motor === "A"){
+      if(speed !== undefined)
+        currentState.motorA.speed = Number(speed);
+      if(dir)
+        currentState.motorA.dir = dir;
+    }
+
+    if(motor === "B"){
+      if(speed !== undefined)
+        currentState.motorB.speed = Number(speed);
+      if(dir)
+        currentState.motorB.dir = dir;
+    }
+
+    broadcastState();
+
+    cors(res);
+    res.writeHead(200,{"Content-Type":"text/plain"});
+    res.end("OK");
+    return;
+  }
+
   if(pathname==="/state"){
     cors(res);
     res.writeHead(200,{"Content-Type":"application/json"});
@@ -62,12 +101,12 @@ const server=http.createServer((req,res)=>{
 
   if(pathname==="/"){
     res.writeHead(200,{"Content-Type":"text/plain"});
-    res.end("Ethan's Jacket Server is running.\n");
+    res.end("Ethan's Jacket Server Running\n");
     return;
   }
 
   cors(res);
-  res.writeHead(404,{"Content-Type": "text/plain"});
+  res.writeHead(404,{"Content-Type":"text/plain"});
   res.end("Not found");
 });
 
@@ -80,7 +119,6 @@ const espClients=new Set();
 
 function broadcastState(){
   const payload=JSON.stringify(currentState);
-  console.log("Broadcast:",payload);
   for(const ws of espClients){
     if(ws.readyState===WebSocket.OPEN){
       ws.send(payload);
@@ -89,14 +127,9 @@ function broadcastState(){
 }
 
 wss.on("connection",ws=>{
-  console.log("ESP Connected");
   espClients.add(ws);
-
   ws.send(JSON.stringify(currentState));
-
-  ws.on("close",()=>{
-    espClients.delete(ws);
-  });
+  ws.on("close",()=>espClients.delete(ws));
 });
 
 server.listen(PORT,()=>{
