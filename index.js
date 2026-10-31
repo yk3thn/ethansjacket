@@ -1,5 +1,8 @@
 const http = require("http");
 const url = require("url");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 const WebSocket = require("ws");
 
 const PORT = process.env.PORT || 3000;
@@ -92,6 +95,45 @@ const server=http.createServer((req,res)=>{
     return;
   }
 
+  // ===== LIGHT JACKET FIRMWARE (OTA) =====
+  // The jacket asks for this on boot and after /update. It sends the MD5 of
+  // the firmware it's running, so it only downloads when light.bin changed.
+  if(pathname==="/firmware/light.bin"){
+    const file=path.join(__dirname,"firmware","light.bin");
+    if(!fs.existsSync(file)){
+      res.writeHead(404,{"Content-Type":"text/plain"});
+      res.end("No firmware");
+      return;
+    }
+
+    const bin=fs.readFileSync(file);
+    const md5=crypto.createHash("md5").update(bin).digest("hex");
+
+    if(req.headers["x-esp8266-sketch-md5"]===md5){
+      res.writeHead(304);
+      res.end();
+      return;
+    }
+
+    res.writeHead(200,{
+      "Content-Type":"application/octet-stream",
+      "Content-Length":bin.length,
+      "x-MD5":md5
+    });
+    res.end(bin);
+    return;
+  }
+
+  // ===== TELL THE LIGHT JACKET TO CHECK FOR NEW FIRMWARE =====
+  if(pathname==="/update"){
+    broadcastState({update:"light"});
+
+    cors(res);
+    res.writeHead(200,{"Content-Type":"text/plain"});
+    res.end("OK");
+    return;
+  }
+
   if(pathname==="/state"){
     cors(res);
     res.writeHead(200,{"Content-Type":"application/json"});
@@ -117,8 +159,10 @@ const wss=new WebSocket.Server({
 
 const espClients=new Set();
 
-function broadcastState(){
-  const payload=JSON.stringify(currentState);
+// extra fields ride along with the full state so the motor jacket,
+// which reads every message as state, just re-applies what it has
+function broadcastState(extra={}){
+  const payload=JSON.stringify({...currentState,...extra});
   for(const ws of espClients){
     if(ws.readyState===WebSocket.OPEN){
       ws.send(payload);

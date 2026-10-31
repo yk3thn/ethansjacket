@@ -47,6 +47,12 @@ button{
   background:linear-gradient(90deg,red,orange,yellow,green,blue,indigo,violet);
 }
 .off{background:#555;}
+.update{
+  background:#222;
+  border:1px solid #4CAF50;
+  font-size:24px;
+  padding:20px 40px;
+}
 .home{background:#4CAF50;}
 .set{
   background:white;
@@ -165,6 +171,14 @@ input[type=range]::-webkit-slider-thumb{
     <option value="christmas">Christmas</option>
     <option value="sparkler">Sparkler</option>
     <option value="wave">Wave (2-color)</option>
+    <option value="fire">Fire</option>
+    <option value="confetti">Confetti</option>
+    <option value="police">Police</option>
+    <option value="heartbeat">Heartbeat</option>
+    <option value="breathe">Breathe (your color)</option>
+    <option value="chase">Chase (your color)</option>
+    <option value="scanner">Scanner (your color)</option>
+    <option value="strobe">Strobe (your color)</option>
   </select>
 </div>
 
@@ -213,6 +227,12 @@ input[type=range]::-webkit-slider-thumb{
 
 <div>
   <button class="off" onclick="send('off')">Off</button>
+</div>
+
+<!-- ===== FIRMWARE UPDATE ===== -->
+
+<div>
+  <button class="update" onclick="updateJacket()">Update Jacket</button>
 </div>
 
 <!-- ===== WAVE POPUP ===== -->
@@ -275,6 +295,10 @@ function selectEffect(val){
   }
   currentEffect=val;
   fetch(`${BASE}/set?cmd=${val}`).catch(()=>{});
+}
+
+function updateJacket(){
+  fetch(`${BASE}/update`).catch(()=>{});
 }
 
 function openWavePopup(){
