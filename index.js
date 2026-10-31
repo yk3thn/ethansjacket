@@ -19,6 +19,8 @@ let currentState = {
   b: 255,
   c1r: 0, c1g: 0, c1b: 255,
   c2r: 255, c2g: 0, c2b: 255,
+  led: 0,      // LED the "Map LEDs" tool is pointing at
+  face: [],    // LEDs that make the jack-o'-lantern face
 
   // MOTOR JACKET
   motorsEnabled: true,
@@ -55,6 +57,11 @@ const server=http.createServer((req,res)=>{
     if(query.c2r) currentState.c2r=Number(query.c2r);
     if(query.c2g) currentState.c2g=Number(query.c2g);
     if(query.c2b) currentState.c2b=Number(query.c2b);
+
+    // LED mapper (led=0 is a real LED, so check for undefined, not truthy)
+    if(query.led!==undefined) currentState.led=Number(query.led);
+    if(query.face!==undefined)
+      currentState.face=String(query.face).split(",").filter(s=>s!=="").map(Number).filter(Number.isInteger);
 
     broadcastState();
 
@@ -110,11 +117,13 @@ const server=http.createServer((req,res)=>{
     const md5=crypto.createHash("md5").update(bin).digest("hex");
 
     if(req.headers["x-esp8266-sketch-md5"]===md5){
+      console.log("Light jacket firmware: up to date");
       res.writeHead(304);
       res.end();
       return;
     }
 
+    console.log("Light jacket firmware: sending update");
     res.writeHead(200,{
       "Content-Type":"application/octet-stream",
       "Content-Length":bin.length,

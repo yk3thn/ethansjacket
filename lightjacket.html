@@ -53,6 +53,11 @@ button{
   font-size:24px;
   padding:20px 40px;
 }
+.map{
+  background:#FF7518;
+  font-size:24px;
+  padding:20px 40px;
+}
 .home{background:#4CAF50;}
 .set{
   background:white;
@@ -144,6 +149,59 @@ input[type=range]::-webkit-slider-thumb{
   font-size:18px;
   background:#000;
 }
+
+/* ===== MAP LEDS POPUP ===== */
+
+#mapPopup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+#mapPopupInner{
+  background:#222;
+  padding:25px;
+  border-radius:16px;
+  border:1px solid #FF7518;
+  width:min(90vw, 500px);
+  box-sizing:border-box;
+}
+
+#mapPopupInner h2{
+  margin-top:0;
+  color:#FF7518;
+}
+
+#ledNumber{
+  font-size:60px;
+  margin:10px 0;
+}
+
+#mapPopupInner input[type=range]{
+  width:100%;
+}
+
+#mapPopupInner button{
+  padding:15px 25px;
+  margin:8px;
+  font-size:22px;
+  background:#000;
+}
+
+#mapPopupInner button.pick{
+  background:#FF7518;
+}
+
+#faceList{
+  margin-top:15px;
+  font-size:18px;
+  color:#aaa;
+  word-break:break-word;
+}
 </style>
 </head>
 
@@ -175,11 +233,13 @@ input[type=range]::-webkit-slider-thumb{
     <option value="confetti">Confetti</option>
     <option value="police">Police</option>
     <option value="heartbeat">Heartbeat</option>
+    <option value="pumpkin">Jack-o'-Lantern</option>
     <option value="breathe">Breathe (your color)</option>
-    <option value="chase">Chase (your color)</option>
-    <option value="scanner">Scanner (your color)</option>
-    <option value="strobe">Strobe (your color)</option>
   </select>
+</div>
+
+<div>
+  <button class="map" onclick="openMapPopup()">Map LEDs</button>
 </div>
 
 <!-- ===== BASIC COLORS ===== -->
@@ -250,6 +310,38 @@ input[type=range]::-webkit-slider-thumb{
     <div style="margin-top:25px;">
       <button onclick="applyWave()">Apply</button>
       <button onclick="closeWavePopup()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAP LEDS POPUP ===== -->
+
+<div id="mapPopup">
+  <div id="mapPopupInner">
+    <h2>Map LEDs</h2>
+
+    <div>The blinking white light on the jacket is this LED. Add the ones that make the face.</div>
+
+    <div id="ledNumber">LED 0</div>
+
+    <input type="range" id="ledSlider"
+           min="0" max="99" value="0"
+           oninput="debounceLed(this.value)">
+
+    <div>
+      <button onclick="stepLed(-1)">&minus;1</button>
+      <button onclick="stepLed(1)">+1</button>
+    </div>
+
+    <div>
+      <button id="pickButton" class="pick" onclick="togglePick()">Add to face</button>
+    </div>
+
+    <div id="faceList">Face: none yet</div>
+
+    <div style="margin-top:15px;">
+      <button onclick="clearFace()">Clear face</button>
+      <button onclick="finishMapping()">Done</button>
     </div>
   </div>
 </div>
@@ -335,6 +427,77 @@ function applyWave(){
 
   fetch(url).catch(()=>{});
   closeWavePopup();
+}
+
+// ===== MAP LEDS =====
+// The face lives on the server, so it survives closing the page.
+
+const LED_COUNT=100;
+let currentLed=0;
+let face=[];
+
+function openMapPopup(){
+  document.getElementById("mapPopup").style.display="flex";
+  fetch(`${BASE}/state`)
+    .then(r=>r.json())
+    .then(s=>{
+      face=s.face||[];
+      currentLed=s.led||0;
+    })
+    .catch(()=>{})
+    .finally(()=>{
+      showLed();
+      sendLed();
+    });
+}
+
+function showLed(){
+  document.getElementById("ledNumber").textContent=`LED ${currentLed}`;
+  document.getElementById("ledSlider").value=currentLed;
+  document.getElementById("pickButton").textContent=
+    face.includes(currentLed)?"Remove from face":"Add to face";
+  document.getElementById("faceList").textContent=
+    face.length?`Face: ${face.join(", ")}`:"Face: none yet";
+}
+
+function sendLed(){
+  currentEffect="locate";
+  fetch(`${BASE}/set?cmd=locate&led=${currentLed}`).catch(()=>{});
+}
+
+let ledTimeout=null;
+function debounceLed(val){
+  currentLed=Number(val);
+  showLed();
+  if(ledTimeout)clearTimeout(ledTimeout);
+  ledTimeout=setTimeout(sendLed,100);
+}
+
+function stepLed(d){
+  currentLed=Math.min(LED_COUNT-1,Math.max(0,currentLed+d));
+  showLed();
+  sendLed();
+}
+
+function togglePick(){
+  if(face.includes(currentLed)) face=face.filter(n=>n!==currentLed);
+  else face=[...face,currentLed].sort((a,b)=>a-b);
+  showLed();
+  fetch(`${BASE}/set?face=${face.join(",")}`).catch(()=>{});
+}
+
+function clearFace(){
+  if(!confirm("Clear the whole face?")) return;
+  face=[];
+  showLed();
+  fetch(`${BASE}/set?face=`).catch(()=>{});
+}
+
+function finishMapping(){
+  document.getElementById("mapPopup").style.display="none";
+  document.getElementById("effectSelect").value="pumpkin";
+  currentEffect="pumpkin";
+  fetch(`${BASE}/set?cmd=pumpkin`).catch(()=>{});
 }
 </script>
 
