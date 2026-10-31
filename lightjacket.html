@@ -104,9 +104,10 @@ input[type=range]::-webkit-slider-thumb{
   height:120px;
 }
 
-/* ===== WAVE POPUP ===== */
+/* ===== WAVE + JACK-O'-LANTERN POPUPS ===== */
 
-#wavePopup{
+#wavePopup,
+#pumpkinPopup{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.75);
@@ -116,7 +117,8 @@ input[type=range]::-webkit-slider-thumb{
   z-index:999;
 }
 
-#wavePopupInner{
+#wavePopupInner,
+#pumpkinPopupInner{
   background:#222;
   padding:25px;
   border-radius:16px;
@@ -124,18 +126,21 @@ input[type=range]::-webkit-slider-thumb{
   min-width:260px;
 }
 
-#wavePopupInner h2{
+#wavePopupInner h2,
+#pumpkinPopupInner h2{
   margin-top:0;
   margin-bottom:15px;
   color:#4CAF50;
 }
 
-#wavePopupInner label{
+#wavePopupInner label,
+#pumpkinPopupInner label{
   display:block;
   margin:10px 0 5px 0;
 }
 
-#wavePopupInner input[type=color]{
+#wavePopupInner input[type=color],
+#pumpkinPopupInner input[type=color]{
   width:100%;
   height:50px;
   border:none;
@@ -143,7 +148,8 @@ input[type=range]::-webkit-slider-thumb{
   background:none;
 }
 
-#wavePopupInner button{
+#wavePopupInner button,
+#pumpkinPopupInner button{
   padding:15px 30px;
   margin:10px;
   font-size:18px;
@@ -314,6 +320,22 @@ input[type=range]::-webkit-slider-thumb{
   </div>
 </div>
 
+<!-- ===== JACK-O'-LANTERN POPUP ===== -->
+
+<div id="pumpkinPopup">
+  <div id="pumpkinPopupInner">
+    <h2>Jack-o'-Lantern</h2>
+
+    <label>Background Color</label>
+    <input type="color" id="pumpkinBg" value="#190600"
+           oninput="debounceBackground()" onchange="debounceBackground()">
+
+    <div style="margin-top:25px;">
+      <button onclick="closePumpkinPopup()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MAP LEDS POPUP ===== -->
 
 <div id="mapPopup">
@@ -385,6 +407,10 @@ function selectEffect(val){
     openWavePopup();
     return;
   }
+  if(val==="pumpkin"){
+    openPumpkinPopup();
+    return;
+  }
   currentEffect=val;
   fetch(`${BASE}/set?cmd=${val}`).catch(()=>{});
 }
@@ -427,6 +453,41 @@ function applyWave(){
 
   fetch(url).catch(()=>{});
   closeWavePopup();
+}
+
+// ===== JACK-O'-LANTERN =====
+
+function openPumpkinPopup(){
+  document.getElementById("pumpkinPopup").style.display="flex";
+  currentEffect="pumpkin";
+  fetch(`${BASE}/set?cmd=pumpkin`).catch(()=>{});
+
+  // start the picker on the background the jacket has now
+  fetch(`${BASE}/state`)
+    .then(r=>r.json())
+    .then(s=>{
+      if(s.bgr===undefined) return;
+      const hex=[s.bgr,s.bgg,s.bgb].map(n=>n.toString(16).padStart(2,"0")).join("");
+      document.getElementById("pumpkinBg").value="#"+hex;
+    })
+    .catch(()=>{});
+}
+
+function closePumpkinPopup(){
+  document.getElementById("pumpkinPopup").style.display="none";
+}
+
+// the jacket follows the picker live, so you can try colors on it
+let bgTimeout=null;
+function debounceBackground(){
+  if(bgTimeout)clearTimeout(bgTimeout);
+  bgTimeout=setTimeout(()=>{
+    const c=document.getElementById("pumpkinBg").value.substring(1);
+    const r=parseInt(c.substring(0,2),16);
+    const g=parseInt(c.substring(2,4),16);
+    const b=parseInt(c.substring(4,6),16);
+    fetch(`${BASE}/set?bgr=${r}&bgg=${g}&bgb=${b}`).catch(()=>{});
+  },150);
 }
 
 // ===== MAP LEDS =====

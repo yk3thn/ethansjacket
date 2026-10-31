@@ -21,6 +21,7 @@ let currentState = {
   c2r: 255, c2g: 0, c2b: 255,
   led: 0,      // LED the "Map LEDs" tool is pointing at
   face: [],    // LEDs that make the jack-o'-lantern face
+  bgr: 25, bgg: 6, bgb: 0,   // jack-o'-lantern background (dim pumpkin orange)
 
   // MOTOR JACKET
   motorsEnabled: true,
@@ -57,6 +58,10 @@ const server=http.createServer((req,res)=>{
     if(query.c2r) currentState.c2r=Number(query.c2r);
     if(query.c2g) currentState.c2g=Number(query.c2g);
     if(query.c2b) currentState.c2b=Number(query.c2b);
+
+    if(query.bgr) currentState.bgr=Number(query.bgr);
+    if(query.bgg) currentState.bgg=Number(query.bgg);
+    if(query.bgb) currentState.bgb=Number(query.bgb);
 
     // LED mapper (led=0 is a real LED, so check for undefined, not truthy)
     if(query.led!==undefined) currentState.led=Number(query.led);
