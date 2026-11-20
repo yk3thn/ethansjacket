@@ -33,6 +33,10 @@ button{
   font-size:35px;
 }
 
+.emergency.off{
+  background:#4CAF50;
+}
+
 input[type=range]{
   width:80%;
   margin-top:15px;
@@ -77,21 +81,21 @@ input[type=range]::-webkit-slider-thumb{
   <button onclick="location.href='index.html'">Home</button>
 </div>
 
-<button class="emergency" onclick="toggleMotors()">
+<button id="motorToggle" class="emergency" onclick="toggleMotors()">
   EMERGENCY STOP
 </button>
 
 <h2 style="color:#4CAF50;">Left Arm</h2>
 <button onclick="setDir('A','cw')">CW</button>
 <button onclick="setDir('A','ccw')">CCW</button>
-<input type="range" min="0" max="1023" value="0"
+<input type="range" id="speedA" min="0" max="255" value="0"
        oninput="setSpeed('A',this.value)">
 <div style="font-size:30px;color:#4CAF50;">Speed</div>
 
 <h2 style="color:#4CAF50;">Right Arm</h2>
 <button onclick="setDir('B','cw')">CW</button>
 <button onclick="setDir('B','ccw')">CCW</button>
-<input type="range" min="0" max="1023" value="0"
+<input type="range" id="speedB" min="0" max="255" value="0"
        oninput="setSpeed('B',this.value)">
 <div style="font-size:30px;color:#4CAF50;">Speed</div>
 
@@ -99,9 +103,31 @@ input[type=range]::-webkit-slider-thumb{
 const BASE="https://ethansjacket-production.up.railway.app";
 let motorsOn=true;
 
+// the button always shows what the jacket is doing, so the motors
+// can't be left switched off without anyone noticing
+function showMotors(){
+  const b=document.getElementById("motorToggle");
+  b.textContent=motorsOn?"EMERGENCY STOP":"START MOTORS";
+  b.classList.toggle("off",!motorsOn);
+}
+
 function toggleMotors(){
   motorsOn=!motorsOn;
+  showMotors();
   fetch(`${BASE}/motor?global=${motorsOn?"on":"off"}`).catch(()=>{});
+}
+
+// start the button and sliders where the jacket actually is
+function loadState(){
+  fetch(`${BASE}/state`)
+    .then(r=>r.json())
+    .then(s=>{
+      motorsOn=s.motorsEnabled;
+      document.getElementById("speedA").value=Math.min(255,s.motorA.speed);
+      document.getElementById("speedB").value=Math.min(255,s.motorB.speed);
+      showMotors();
+    })
+    .catch(()=>showMotors());
 }
 
 function setDir(motor,dir){
@@ -111,6 +137,8 @@ function setDir(motor,dir){
 function setSpeed(motor,val){
   fetch(`${BASE}/motor?motor=${motor}&speed=${val}`).catch(()=>{});
 }
+
+loadState();
 </script>
 
 </body>
